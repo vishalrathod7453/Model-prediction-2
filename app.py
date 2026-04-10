@@ -5,80 +5,76 @@ import pickle
 import requests
 from streamlit_lottie import st_lottie
 
-# Page Configuration
-st.set_page_config(page_title="AI Impact Insights", page_icon="🤖", layout="wide")
+# Page configuration
+st.set_page_config(page_title="Diabetes Risk Predictor", page_icon="🏥", layout="wide")
 
-# Custom CSS for a professional look
+# Custom CSS for a clean medical UI
 st.markdown("""
     <style>
-    .main { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
-    .stButton>button {
-        background-color: #4CAF50;
-        color: white;
-        border-radius: 12px;
-        height: 3em;
-        transition: 0.3s;
-    }
-    .stButton>button:hover { background-color: #45a049; transform: scale(1.02); }
+    .main { background-color: #f8f9fa; }
+    .stButton>button { width: 100%; border-radius: 5px; height: 3em; background-color: #007bff; color: white; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- ANIMATION LOADER ---
+# --- ANIMATION ASSETS ---
 def load_lottieurl(url):
     r = requests.get(url)
     return r.json() if r.status_code == 200 else None
 
-lottie_ai = load_lottieurl("https://assets9.lottiefiles.com/packages/lf20_m6cu96ze.json")
+lottie_health = load_lottieurl("https://assets10.lottiefiles.com/packages/lf20_57pk9mow.json")
 
 # --- MODEL LOADING ---
 @st.cache_resource
 def load_model():
-    # Make sure 'Model (3).pkl' is uploaded to your GitHub main folder
-    with open('Model (3).pkl', 'rb') as file:
+    # Ensure 'Model2.pkl' is in the same folder as this script on GitHub
+    with open('Model2.pkl', 'wb') as file:
         return pickle.load(file)
 
 try:
     model = load_model()
-except FileNotFoundError:
-    st.error("⚠️ 'Model (3).pkl' not found. Please upload it to your GitHub repository.")
+except Exception as e:
+    st.error(f"Error loading model: {e}. Ensure 'Model2.pkl' is uploaded to GitHub.")
     st.stop()
 
-# --- FRONTEND ---
-st.title("🎓 Student AI Usage & Impact Predictor")
-st.write("Predict student outcomes based on their interaction with AI tools.")
+# --- SIDEBAR INPUTS ---
+st.sidebar.header("📋 Patient Clinical Data")
+with st.sidebar:
+    preg = st.number_input("Pregnancies", min_value=0, max_value=20, value=1)
+    glucose = st.slider("Glucose Level (mg/dL)", 0, 200, 100)
+    bp = st.slider("Blood Pressure (mm Hg)", 0, 130, 70)
+    skin = st.slider("Skin Thickness (mm)", 0, 100, 20)
+    insulin = st.slider("Insulin Level (mu U/ml)", 0, 900, 80)
+    bmi = st.number_input("BMI (Body Mass Index)", min_value=0.0, max_value=70.0, value=25.0)
+    dpf = st.number_input("Diabetes Pedigree Function", min_value=0.0, max_value=3.0, value=0.5, format="%.3f")
+    age = st.number_input("Age", min_value=1, max_value=120, value=30)
 
-col1, col2 = st.columns([1, 1.2])
+# --- MAIN PAGE FRONTEND ---
+st.title("🏥 Diabetes Health Risk Analysis")
+st.write("Using AI to evaluate patient health indicators based on the KNN model.")
+
+col1, col2 = st.columns([1, 1])
 
 with col1:
-    st_lottie(lottie_ai, height=400, key="coding")
+    if lottie_health:
+        st_lottie(lottie_health, height=300)
 
 with col2:
-    st.subheader("📊 Input Student Parameters")
-    with st.container():
-        # Feature inputs organized to match the 8 expected features
-        age = st.number_input("Age", 10, 80, 20)
+    st.markdown("### Analysis Summary")
+    st.write("Check the values in the sidebar and click the button below.")
+    
+    if st.button("Generate Prediction"):
+        # The 8 features MUST be in this exact order 
+        features = np.array([[preg, glucose, bp, skin, insulin, bmi, dpf, age]])
         
-        # Note: KNN models require numerical inputs. 
-        # These select boxes map common categories to numbers (0, 1, 2...)
-        gender = st.selectbox("Gender", [0, 1], format_func=lambda x: "Male" if x==0 else "Female")
-        edu = st.selectbox("Education Level", [0, 1, 2], format_func=lambda x: ["School", "UG", "PG"][x])
-        city = st.number_input("City Code (e.g., 0-10)", 0, 10, 1)
+        prediction = model.predict(features)
         
-        ai_tool = st.selectbox("AI Tool Used", [0, 1, 2], format_func=lambda x: ["ChatGPT", "Gemini", "Other"][x])
-        hours = st.slider("Daily Usage Hours", 0, 12, 2)
-        purpose = st.selectbox("Purpose", [0, 1], format_func=lambda x: "Academic" if x==0 else "Personal")
-        impact = st.selectbox("Current Impact on Grades", [0, 1], format_func=lambda x: "Neutral" if x==0 else "Positive")
-
-    if st.button("✨ Run AI Prediction"):
-        # Construct exactly 8 features in the correct order 
-        input_features = np.array([[age, gender, edu, city, ai_tool, hours, purpose, impact]])
-        
-        try:
-            prediction = model.predict(input_features)
+        st.divider()
+        if prediction[0] == 1:
+            st.error("### Result: High Risk Detected")
+            st.write("The model suggests a high probability of diabetes. Please consult a medical professional.")
+        else:
+            st.success("### Result: Low Risk Detected")
             st.balloons()
-            st.success(f"### Predicted Result: {prediction[0]}")
-        except Exception as e:
-            st.error(f"Prediction Error: {e}")
+            st.write("The model suggests a low probability of diabetes based on these parameters.")
 
-st.divider()
-st.caption("AI Model Deployment | 2026 Professional Portfolio")
+st.caption("Disclaimer: This tool is for educational purposes and is not a medical diagnosis.")
