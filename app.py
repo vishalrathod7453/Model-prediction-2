@@ -32,7 +32,7 @@ st.write("### Enter your data and get instant predictions")
 
 # ------------------ LOAD MODEL ------------------
 try:
-    model = joblib.load("model2.pkl")
+    model = joblib.load("model.pkl")
 except Exception as e:
     st.error(f"❌ Model loading failed: {e}")
     st.stop()
