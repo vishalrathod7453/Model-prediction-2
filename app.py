@@ -1,69 +1,64 @@
 import streamlit as st
-import pickle
+import joblib
 import numpy as np
-import pandas as pd
-from streamlit_lottie import st_lottie
-import requests
 
-# 1. Page Config
-st.set_config(page_title="AI Usage Predictor", layout="centered")
+# ------------------ PAGE CONFIG ------------------
+st.set_page_config(
+    page_title="ML Predictor",
+    page_icon="🚀",
+    layout="wide"
+)
 
-# 2. Animations
-def load_lottieurl(url):
-    r = requests.get(url)
-    return r.json() if r.status_code == 200 else None
+# ------------------ CUSTOM CSS ------------------
+st.markdown("""
+    <style>
+    .main {
+        background-color: #0e1117;
+        color: white;
+    }
+    .stButton>button {
+        background-color: #ff4b4b;
+        color: white;
+        border-radius: 10px;
+        height: 3em;
+        width: 100%;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-lottie_coding = load_lottieurl("https://assets5.lottiefiles.com/packages/lf20_fcfjwiyb.json")
+# ------------------ HEADER ------------------
+st.title("🚀 Smart ML Prediction App")
+st.write("### Enter your data and get instant predictions")
 
-# 3. Load Model [cite: 1, 85]
-@st.cache_resource
-def load_model():
-    with open("Model1.pkl", "rb") as f:
-        return pickle.load(f)
+# ------------------ LOAD MODEL ------------------
+try:
+    model = joblib.load("model.pkl")
+except Exception as e:
+    st.error(f"❌ Model loading failed: {e}")
+    st.stop()
 
-model = load_model()
+# ------------------ INPUT SECTION ------------------
+st.subheader("📥 Input Features")
 
-# 4. Frontend Styling
-st.title("🤖 Smart AI Predictor")
-st_lottie(lottie_coding, height=200)
+col1, col2 = st.columns(2)
 
-# 5. User Inputs
-with st.expander("Enter User Details", expanded=True):
-    col1, col2 = st.columns(2)
-    with col1:
-        age = st.number_input("Age", 18, 80, 25)
-        # Using lists derived from your model's feature names 
-        gender = st.selectbox("Gender", ["Male", "Female"])
-        edu = st.selectbox("Education", ["High School", "Undergrad", "Postgrad"])
-        city = st.selectbox("City Category", ["Tier 1", "Tier 2", "Tier 3"])
-    with col2:
-        tool = st.selectbox("AI Tool", ["ChatGPT", "Gemini", "Claude", "Other"])
-        hours = st.slider("Daily Usage", 0.0, 24.0, 3.0)
-        purpose = st.selectbox("Primary Purpose", ["Work", "Study", "Creative"])
+with col1:
+    feature1 = st.number_input("Feature 1", value=0.0)
 
-# 6. Simple Encoder (Match this to your training LabelEncoders!)
-mapping = {
-    "Male": 0, "Female": 1,
-    "High School": 0, "Undergrad": 1, "Postgrad": 2,
-    "Tier 1": 0, "Tier 2": 1, "Tier 3": 2,
-    "ChatGPT": 0, "Gemini": 1, "Claude": 2, "Other": 3,
-    "Work": 0, "Study": 1, "Creative": 2
-}
+with col2:
+    feature2 = st.number_input("Feature 2", value=0.0)
 
-# 7. Prediction Logic
-if st.button("Analyze Data"):
-    # Transform categorical text to numerical values 
-    features = np.array([[
-        age, 
-        mapping[gender], 
-        mapping[edu], 
-        mapping[city], 
-        mapping[tool], 
-        hours, 
-        mapping[purpose]
-    ]])
-    
-    prediction = model.predict(features)
-    
-    st.success(f"### Predicted Class: {prediction[0]}")
-    st.balloons()
+# ------------------ PREDICTION ------------------
+if st.button("🔮 Predict"):
+    try:
+        input_data = np.array([[feature1, feature2]])
+        prediction = model.predict(input_data)
+
+        st.success(f"✅ Prediction: {prediction[0]}")
+
+    except Exception as e:
+        st.error(f"❌ Prediction failed: {e}")
+
+# ------------------ FOOTER ------------------
+st.markdown("---")
+st.markdown("💡 Built with Streamlit")
