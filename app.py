@@ -65,7 +65,7 @@ if model:
     col1, col2 = st.columns([1, 1])
 
     with col1:
-        st_lottie(lottie_predict, height=300)
+        st_lottie(lottie_predict, height=250)
 
     with col2:
         st.markdown('<div class="card">', unsafe_allow_html=True)
