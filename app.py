@@ -63,7 +63,7 @@ def load_model():
     model_path = "Model2.pkl"
     if not os.path.exists(model_path):
         return None
-    with open(model_path, "rb") as f:
+    with open(model.pkl, "rb") as f:
         return pickle.load(f)
 
 model = load_model()
