@@ -54,8 +54,8 @@ lottie_ani = load_lottieurl("https://lottie.host/825441ec-3c35-4277-9877-33a8874
 # --- MODEL LOADING ---
 @st.cache_resource
 def load_model():
-    if os.path.exists("Model1.pkl"):
-        with open("Model1.pkl", "rb") as f:
+    if os.path.exists("Model2.pkl"):
+        with open("Model2.pkl", "rb") as f:
             return pickle.load(f)
     return None
 
